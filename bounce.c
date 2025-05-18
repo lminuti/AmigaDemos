@@ -15,13 +15,13 @@
 
 #define BALL_COUNT 3
 
-BPTR console;
+BPTR console = 0;
 
-struct IntuitionBase *IntuitionBase;
-struct GfxBase *GfxBase;
+struct IntuitionBase *IntuitionBase = NULL;
+struct GfxBase *GfxBase = NULL;
 
-struct Window *myWindow;
-struct TextFont *font;
+struct Window *myWindow = NULL;
+struct TextFont *font = NULL;
 
 int line_distance = 15;
 
@@ -173,22 +173,22 @@ LONG handle_message(struct IntuiMessage *msg)
 int main(void)
 {
     LONG result = 1;
+    int exit_code = 0;
 
     console = Open("*", MODE_OLDFILE);
 
     IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 0);
     if (IntuitionBase == NULL) {
-        //printf("Failed to open Intuition library\n");
-        Close(console);
-        return 1;
+        printf("Failed to open Intuition library\n");
+        exit_code = 1;
+        goto cleanup;
     }
 
     GfxBase = (struct GfxBase *)OpenLibrary("graphics.library", 0);
     if (GfxBase == NULL) {
-        //printf("Failed to open graphics library\n");
-        CloseLibrary((struct Library *)IntuitionBase);
-        Close(console);
-        return 1;
+        printf("Failed to open graphics library\n");
+        exit_code = 1;
+        goto cleanup;
     }
 
     MyFont.ta_Name = "emerald.font";
@@ -198,10 +198,8 @@ int main(void)
     font = OpenDiskFont(&MyFont);
     if (font == NULL) {
         printf("Failed to open font\n");
-        CloseLibrary((struct Library *)GfxBase);
-        CloseLibrary((struct Library *)IntuitionBase);
-        Close(console);
-        return 1;
+        exit_code = 1;
+        goto cleanup;
     }
 
     struct IntuiMessage *msg;
@@ -211,9 +209,8 @@ int main(void)
     myWindow = OpenWindow(&myNewWindow);
     if (myWindow == NULL) {
         printf("Failed to open windows\n");
-        CloseLibrary((struct Library *)IntuitionBase);
-        Close(console);
-        return 1;
+        exit_code = 1;
+        goto cleanup;
     }
 
     draw_window(myWindow);
@@ -233,11 +230,22 @@ int main(void)
         }
     }
     
-    CloseWindow(myWindow);
-    CloseLibrary((struct Library *)IntuitionBase);
-    CloseLibrary((struct Library *)GfxBase);
-    CloseFont(font);
-    Close(console);
+cleanup:
+    if (myWindow != NULL) {
+        CloseWindow(myWindow);
+    }
+    if (font != NULL) {
+        CloseFont(font);
+    }
+    if (GfxBase != NULL) {
+        CloseLibrary((struct Library *)GfxBase);
+    }
+    if (IntuitionBase != NULL) {
+        CloseLibrary((struct Library *)IntuitionBase);
+    }
+    if (console != 0) {
+        Close(console);
+    }
     
-    return 0;
+    return exit_code;
 }
