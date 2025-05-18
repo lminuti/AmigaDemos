@@ -11,7 +11,6 @@
 #include "proto/intuition.h"
 #include "proto/exec.h"
 #include "proto/graphics.h"
-#include "proto/diskfont.h"
 
 #define BALL_COUNT 3
 
@@ -21,17 +20,8 @@ struct IntuitionBase *IntuitionBase = NULL;
 struct GfxBase *GfxBase = NULL;
 
 struct Window *myWindow = NULL;
-struct TextFont *font = NULL;
 
 int line_distance = 15;
-
-struct TextAttr MyFont =
-{
-    "topaz.font", /* Font Name */
-    TOPAZ_SIXTY, /* Font Height */ 
-    FS_NORMAL, /* Style */ 
-    FPF_ROMFONT /* Preferences */
-};
 
 struct Point {
     int x, y;
@@ -55,28 +45,34 @@ struct Line line = { { 35, 20, 6, 4, 1, 1 }, { 120, 30, 8, 6, 1, 1 } };
 struct Line eraserLine = { { 35, 20, 6, 4, 1, 1 }, { 120, 30, 8, 6, 1, 1 } };
 
 #ifndef DEBUG
-void printf(const char *fmt, ...) {}
+void printf(message)
+    char *message;
+{
+
+}
 #endif
 
 struct NewWindow myNewWindow = {
-    30, 30, // Top and Left
-    600, 200, // Width and Height
-    -1, // Detail Pen: penna usata per il bordo
-    -1, // Block Pen: penna usata per disegnare i gadget
-    CLOSEWINDOW | INTUITICKS, // Flag IDCMP (eventi)
-    SMART_REFRESH | WINDOWCLOSE | WINDOWDRAG | WINDOWDEPTH | ACTIVATE | GIMMEZEROZERO, // Flags
-    //SMART_REFRESH | WINDOW_NORMAL_FLAGS | ACTIVATE | GIMMEZEROZERO | NOCAREREFRESH, // Flags
-    NULL, // First Gadget
-    NULL, // Check Mark
-    "Bounce", // Window Title
-    NULL, // Pointer to the screen
-    NULL, // Puntatore alla bitmap se si usa una SuperBitmap
-    100, 100, // Min Width and Height
-    620, 200, // Max Width and Height
-    WBENCHSCREEN // Tipo di schermo
+    30, 30, /* Top and Left */
+    600, 200, /* Width and Height */
+    -1, /* Detail Pen: penna usata per il bordo */
+    -1, /* Block Pen: penna usata per disegnare i gadget */
+    CLOSEWINDOW | INTUITICKS, /* Flag IDCMP (eventi) */
+    SMART_REFRESH | WINDOWCLOSE | WINDOWDRAG | WINDOWDEPTH | ACTIVATE | GIMMEZEROZERO, /* Flags */
+    /* SMART_REFRESH | WINDOW_NORMAL_FLAGS | ACTIVATE | GIMMEZEROZERO | NOCAREREFRESH, /* Flags */
+    NULL, /* First Gadget */
+    NULL, /* Check Mark */
+    "Bounce", /* Window Title */
+    NULL, /* Pointer to the screen */
+    NULL, /* Puntatore alla bitmap se si usa una SuperBitmap */
+    100, 100, /* Min Width and Height */
+    620, 200, /* Max Width and Height */
+    WBENCHSCREEN /* Tipo di schermo */
 };
 
-void draw_point(struct Window *window, struct Point *point)
+void draw_point(window, point)
+    struct Window *window;
+    struct Point *point;
 {
     struct RastPort *rp = window->RPort;
     SetDrMd(rp, JAM1);
@@ -84,7 +80,9 @@ void draw_point(struct Window *window, struct Point *point)
     DrawEllipse(rp, point->x, point->y, point->rx, point->ry);
 }
 
-void erase_point(struct Window *window, struct Point *point)
+void erase_point(window, point)
+    struct Window *window;
+    struct Point *point;
 {
     struct RastPort *rp = window->RPort;
     SetDrMd(rp, JAM1);
@@ -92,48 +90,59 @@ void erase_point(struct Window *window, struct Point *point)
     DrawEllipse(rp, point->x, point->y, point->rx, point->ry);
 }
 
-void draw_line(struct Window *window, struct Line *line)
+void draw_line(window, line)
+    struct Window *window; 
+    struct Line *line;
 {
-    struct RastPort *rp = window->RPort;
+    struct RastPort *rp;
+    rp = window->RPort;
     SetDrMd(rp, COMPLEMENT);
     Move(rp, line->p1.x, line->p1.y);
     Draw(rp, line->p2.x, line->p2.y);
 }
 
-void draw_window(struct Window *window)
+void draw_window(window)
+    struct Window *window;
 {
-    // struct RastPort *rp = window->RPort;
-    // SetFont(myWindow->RPort, font);
-    // Move(myWindow->RPort, 20, 20); 
-    // Text(myWindow->RPort, "Hello World", 11);    
+    /*
+    struct RastPort *rp = window->RPort;
+    SetFont(myWindow->RPort, font);
+    Move(myWindow->RPort, 20, 20); 
+    Text(myWindow->RPort, "Hello World", 11);   
+    */ 
 }
 
-void move_point(struct Point *point)
+void move_point(point)
+    struct Point *point;
 {
     point->x += point->dx;
     point->y += point->dy;
 
-    // Check for collision with window borders
+    /* Check for collision with window borders */
     if (point->x - point->rx < myWindow->BorderLeft || point->x + point->rx > myWindow->Width - myWindow->BorderLeft - myWindow->BorderRight) {
-        point->dx = -point->dx; // Reverse direction on X axis
+        point->dx = -point->dx; /* Reverse direction on X axis */
     }
     if (point->y - point->ry < 0 || point->y + point->ry > myWindow->Height - myWindow->BorderTop - myWindow->BorderBottom) {
-        point->dy = -point->dy; // Reverse direction on X axis
+        point->dy = -point->dy; /* Reverse direction on X axis */
     }
 }
 
-void move_points(struct Point *points, int count)
+void move_points(points, count)
+    struct Point *points;
+    int count;
 {
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         erase_point(myWindow, &points[i]);
         move_point(&points[i]);
         draw_point(myWindow, &points[i]);
     }
 }
 
-void handle_ticks(struct Window *window)
+void handle_ticks(window)
+    struct Window *window;
 {
-    //move_points(points, BALL_COUNT);
+    /* move_points(points, BALL_COUNT); */
 
     if (line_distance <= 0) {
         draw_line(window, &eraserLine);
@@ -148,10 +157,11 @@ void handle_ticks(struct Window *window)
     draw_line(window, &line);
 }
 
-LONG handle_message(struct IntuiMessage *msg)
+LONG handle_message(msg)
+    struct IntuiMessage *msg;
 {
     LONG msgClass = msg->Class;
-    //write_message("Message class: %ld\n", msgClass);
+    /* write_message("Message class: %ld\n", msgClass); */
     switch (msgClass) {
         case CLOSEWINDOW:
             return 0;
@@ -170,10 +180,11 @@ LONG handle_message(struct IntuiMessage *msg)
     }
 }
     
-int main(void)
+int main()
 {
     LONG result = 1;
     int exit_code = 0;
+    struct IntuiMessage *msg;
 
     console = Open("*", MODE_OLDFILE);
 
@@ -190,21 +201,8 @@ int main(void)
         exit_code = 1;
         goto cleanup;
     }
-
-    MyFont.ta_Name = "emerald.font";
-    MyFont.ta_YSize = 20;
-    //MyFont.ta_YSize = TOPAZ_SIXTY;
-    //MyFont.ta_YSize = TOPAZ_EIGHTY;
-    font = OpenDiskFont(&MyFont);
-    if (font == NULL) {
-        printf("Failed to open font\n");
-        exit_code = 1;
-        goto cleanup;
-    }
-
-    struct IntuiMessage *msg;
         
-    //write_message("Hello, Amiga!\n");
+    /* write_message("Hello, Amiga!\n"); */
     
     myWindow = OpenWindow(&myNewWindow);
     if (myWindow == NULL) {
@@ -214,7 +212,7 @@ int main(void)
     }
 
     draw_window(myWindow);
-    //move_points(points, BALL_COUNT);
+    /* move_points(points, BALL_COUNT); */
     draw_line(myWindow, &line);
     
     while (result) {
@@ -233,9 +231,6 @@ int main(void)
 cleanup:
     if (myWindow != NULL) {
         CloseWindow(myWindow);
-    }
-    if (font != NULL) {
-        CloseFont(font);
     }
     if (GfxBase != NULL) {
         CloseLibrary((struct Library *)GfxBase);

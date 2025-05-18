@@ -1,6 +1,6 @@
 CC = m68k-amigaos-gcc
 STRIP = m68k-amigaos-strip
-CFLAGS = -mcrt=nix13 -g -O2 -Wno-builtin-declaration-mismatch
+CFLAGS = -mcrt=nix13 -g -O2 -Wno-builtin-declaration-mismatch -Wno-implicit-function-declaration
 OUTPUT = /mnt/d/winuae/data_hd/w13/
 BUILD_DIR = build
 

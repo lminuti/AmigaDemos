@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "exec/types.h"
 #include "intuition/intuition.h"
 #include "libraries/dosextens.h"
@@ -9,12 +8,11 @@
 #include "proto/graphics.h"
 #include "proto/diskfont.h"
 
-#define WINDOW_NORMAL_FLAGS WINDOWSIZING | WINDOWCLOSE | WINDOWDRAG | WINDOWDEPTH 
-
 BPTR console = 0;
 
 struct IntuitionBase *IntuitionBase = NULL;
 struct GfxBase *GfxBase = NULL;
+struct Library *DiskfontBase = NULL;
 
 struct Window *myWindow = NULL;
 struct TextFont *font = NULL;
@@ -27,46 +25,42 @@ struct TextAttr MyFont =
     FPF_ROMFONT /* Preferences */
 };
 
-void write_message(const char *fmt, ...)
+void write_message(message)
+char *message;
 {
-    char buffer[256];
-    va_list args;
-    va_start(args, fmt);
-    vsprintf(buffer, fmt, args);
-    va_end(args);
-    Write(console, buffer, strlen(buffer));
+    Write(console, message, strlen(message));
 }
 
 struct NewWindow myNewWindow = {
-    30, 30, // Top and Left
-    320, 200, // Width and Height
-    -1, // Detail Pen: penna usata per il bordo
-    -1, // Block Pen: penna usata per disegnare i gadget
-    CLOSEWINDOW | NEWSIZE | REFRESHWINDOW, // Flag IDCMP (eventi)
-    SIMPLE_REFRESH | WINDOW_NORMAL_FLAGS | ACTIVATE | GIMMEZEROZERO, // Flags
-    //SMART_REFRESH | WINDOW_NORMAL_FLAGS | ACTIVATE | GIMMEZEROZERO | NOCAREREFRESH, // Flags
-    NULL, // First Gadget
-    NULL, // Check Mark
-    "Hello, Amiga!", // Window Title
-    NULL, // Pointer to the screen
-    NULL, // Puntatore alla bitmap se si usa una SuperBitmap
-    100, 100, // Min Width and Height
-    620, 200, // Max Width and Height
-    WBENCHSCREEN // Tipo di schermo
+    30, 30, /* Top and Left */
+    320, 200, /* Width and Height */
+    -1, /* Detail Pen: penna usata per il bordo */
+    -1, /* Block Pen: penna usata per disegnare i gadget */
+    CLOSEWINDOW | NEWSIZE | REFRESHWINDOW, /* Flag IDCMP (eventi) */
+    SIMPLE_REFRESH | WINDOWSIZING | WINDOWCLOSE | WINDOWDRAG | WINDOWDEPTH | ACTIVATE | GIMMEZEROZERO, /* Flags */
+    NULL, /* First Gadget */
+    NULL, /* Check Mark */
+    "Hello, Amiga!", /* Window Title */
+    NULL, /* Pointer to the screen */
+    NULL, /* Puntatore alla bitmap se si usa una SuperBitmap */
+    100, 100, /* Min Width and Height */
+    620, 200, /* Max Width and Height */
+    WBENCHSCREEN /* Tipo di schermo */
 };
 
-void draw_window(struct Window *window)
+void draw_window(window)
+    struct Window *window;
 {
     struct RastPort *rp = window->RPort;
-    SetFont(myWindow->RPort, font);
-    Move(myWindow->RPort, 20, 20); 
-    Text(myWindow->RPort, "Hello World", 11);    
+    SetFont(rp, font);
+    Move(rp, 20, 20); 
+    Text(rp, "Hello World", 11);    
 }
 
-LONG handle_message(struct IntuiMessage *msg)
+LONG handle_message(msg)
+    struct IntuiMessage *msg;
 {
     LONG msgClass = msg->Class;
-    write_message("Message class: %ld\n", msgClass);
     switch (msgClass) {
         case CLOSEWINDOW:
             return 0;
@@ -82,10 +76,11 @@ LONG handle_message(struct IntuiMessage *msg)
     }
 }
     
-int main(void)
+int main()
 {
     LONG result = 1;
     int exit_code = 0;
+    struct IntuiMessage *msg;
 
     console = Open("*", MODE_OLDFILE);
 
@@ -103,18 +98,21 @@ int main(void)
         goto cleanup;
     }
 
+    DiskfontBase = OpenLibrary("diskfont.library", 0);
+    if (DiskfontBase == NULL) {
+        printf("Failed to open diskfont library\n");
+        exit_code = 1;
+        goto cleanup;
+    }
+
     MyFont.ta_Name = "emerald.font";
     MyFont.ta_YSize = 20;
-    //MyFont.ta_YSize = TOPAZ_SIXTY;
-    //MyFont.ta_YSize = TOPAZ_EIGHTY;
     font = OpenDiskFont(&MyFont);
     if (font == NULL) {
         printf("Failed to open font\n");
         exit_code = 1;
         goto cleanup;
     }
-
-    struct IntuiMessage *msg;
         
     write_message("Hello, Amiga!\n");
     
@@ -146,6 +144,9 @@ cleanup:
     }
     if (font != NULL) {
         CloseFont(font);
+    }
+    if (DiskfontBase != NULL) {
+        CloseLibrary((struct Library *)DiskfontBase);
     }
     if (GfxBase != NULL) {
         CloseLibrary((struct Library *)GfxBase);
