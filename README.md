@@ -26,6 +26,14 @@ This repository currently includes the following demos:
 
 ![bounce](bounce.gif)
 
+## Compatibility with old Amiga C compiler
+
+All source file of this project aim to be compatibile with old Amiga C compiler. To achive this goal the C language use the following convention:
+
+* All comments use the multi-line comment style (`/* ... */`). (Double slashes `//` were introduced later.)
+* Function arguments are declared outside the function prototype.
+* Variables are declared at the top of any function.
+
 ## License
 
 MIT License
